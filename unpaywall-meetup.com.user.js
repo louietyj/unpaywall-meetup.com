@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Unpaywall meetup.com
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Remove paywall, unblur photos, enable scrolling, and re-enable dynamic content
 // @author       louietyj
 // @match        https://www.meetup.com/*
@@ -14,17 +14,24 @@
     'use strict';
 
     function unPaywall() {
-        document.querySelectorAll('div#modal').forEach(el => {
+        document.querySelectorAll('div[role="dialog"]').forEach(el => {
             if (el.textContent.includes('Join Meetup+')) {
                 el.style.display = 'none';
             }
         });
+        document.querySelectorAll('div[data-slot="modal-overlay"]').forEach(el => {
+            el.style.display = 'none';
+        });
     }
 
     function unblurPhotos() {
-        const elements = document.querySelectorAll('.blur-sm');
+        const elements = document.querySelectorAll('[class*="blur"]');
         elements.forEach(element => {
-            element.classList.remove('blur-sm');
+            Array.from(element.classList).forEach(cls => {
+                if (cls.includes('blur')) {
+                    element.classList.remove(cls);
+                }
+            });
         });
     }
 
@@ -39,6 +46,10 @@
             }
         `;
         document.head.appendChild(style);
+
+        window.addEventListener('wheel', function (e) {
+            e.stopImmediatePropagation();
+        }, { capture: true });
     }
 
     function removeLocks() {
